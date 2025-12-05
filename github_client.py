@@ -50,15 +50,21 @@ class GitHubClient:
         return resp.json()
 
 
-def run_git(args: list[str], cwd: str) -> None:
-    """Run a git command and raise on failure."""
+def run_git(args: list[str], cwd: str) -> str:
+    """Run a git command and raise on failure. Returns stdout."""
     cmd = ["git"] + args
     print(f"Running: {' '.join(cmd)} in {cwd}")
-    result = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    result = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         print(f"Git error (exit {result.returncode}): {cmd}", file=sys.stderr)
         print(result.stdout, file=sys.stderr)
-        raise subprocess.CalledProcessError(result.returncode, cmd)
+        print(result.stderr, file=sys.stderr)
+        # Create an exception with the error message for better error handling
+        error = subprocess.CalledProcessError(result.returncode, cmd)
+        error.output = result.stdout
+        error.stderr = result.stderr
+        raise error
+    return result.stdout
 
 
 def is_git_repo(cwd: str) -> bool:
@@ -66,7 +72,23 @@ def is_git_repo(cwd: str) -> bool:
     try:
         run_git(["rev-parse", "--is-inside-work-tree"], cwd)
         return True
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        # Check if it's a dubious ownership error
+        stderr = getattr(e, 'stderr', '')
+        if "dubious ownership" in stderr:
+            print(f"Configuring safe.directory for {cwd}")
+            try:
+                subprocess.run(
+                    ["git", "config", "--global", "--add", "safe.directory", cwd],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                # Try again after configuring
+                run_git(["rev-parse", "--is-inside-work-tree"], cwd)
+                return True
+            except subprocess.CalledProcessError:
+                return False
         return False
 
 

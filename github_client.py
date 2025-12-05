@@ -56,8 +56,8 @@ def run_git(args: list[str], cwd: str) -> None:
 
 def configure_git_user(cwd: str, actor: str) -> None:
     """Configure git user for commits."""
-    run_git(["config", "user.name", actor], cwd)
-    run_git(["config", "user.email", f"{actor}@users.noreply.github.com"], cwd)
+    run_git(["config", "--local", "user.name", actor], cwd)
+    run_git(["config", "--local", "user.email", f"{actor}@users.noreply.github.com"], cwd)
 
 
 def set_remote_with_token(cwd: str, token: str, repo: str) -> None:

@@ -1,14 +1,13 @@
 FROM python:3.11-slim
 
-WORKDIR /app
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates \
     && pip install --no-cache-dir uv \
     && rm -rf /var/lib/apt/lists/*
 
-COPY main.py file_counter.py github_client.py ./
-COPY pyproject.toml ./pyproject.toml
+COPY main.py file_counter.py github_client.py pyproject.toml /action/
+
+WORKDIR /action
 
 RUN uv pip install --system --no-cache .
 

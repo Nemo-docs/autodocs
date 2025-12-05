@@ -13,4 +13,4 @@ RUN uv pip install --system --no-cache .
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "/action/main.py"]

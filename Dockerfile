@@ -5,12 +5,13 @@ RUN apt-get update \
     && pip install --no-cache-dir uv \
     && rm -rf /var/lib/apt/lists/*
 
-COPY main.py file_counter.py github_client.py pyproject.toml /action/
+COPY main.py file_counter.py github_client.py pyproject.toml entrypoint.sh /action/
 
 WORKDIR /action
 
-RUN uv pip install --system --no-cache .
+RUN chmod +x /action/entrypoint.sh && \
+    uv pip install --system --no-cache .
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python", "/action/main.py"]
+ENTRYPOINT ["/action/entrypoint.sh"]

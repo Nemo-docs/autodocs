@@ -1,0 +1,20 @@
+[project]
+name = "automated-docs"
+version = "0.1.0"
+description = "Automated utilities for repo file counting and PR updates."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.32.3,<3",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Source code now lives in the repo-level `src/` directory
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from file_counter import count_files, write_file_count_file
+from agents import create_summary
 from github_client import (
     GitHubClient,
     checkout_work_branch,
@@ -19,10 +19,12 @@ from github_client import (
 )
 
 
-WORK_BRANCH = "nemo_docs/file-count-update"
-COMMIT_MSG = "nemo_docs: update file_count"
-PR_TITLE = "nemo_docs: Update file_count"
-PR_BODY = "Automated update of file_count."
+WORK_BRANCH = "nemo_docs/summary-update"
+COMMIT_MSG = "nemo_docs: update repository summary"
+PR_TITLE = "nemo_docs: Update repository summary"
+PR_BODY = """Automated summary of README.md using OpenAI.
+
+This PR adds or updates `summary.txt` with a concise overview of the project."""
 
 
 def require_env(name: str) -> str:
@@ -40,8 +42,11 @@ def main() -> None:
     print("[Main] Starting automated file count workflow")
     print("="*80)
     
-    workspace = Path.cwd()
-    print(f"[Main] Detected workspace: {workspace}")
+    workspace = Path("/github/workspace")
+    if not workspace.exists():
+        print(f"[Main] ERROR: /github/workspace not found - ensure Docker mount is set", file=sys.stderr)
+        sys.exit(1)
+    print(f"[Main] Using Actions workspace: {workspace}")
     print(f"[Main] Current working dir: {os.getcwd()}")
     
     # Log environment variables (masked)
@@ -52,7 +57,10 @@ def main() -> None:
     print(f"[Main]   GITHUB_SHA: {os.getenv('GITHUB_SHA', 'NOT SET')}")
     print(f"[Main]   GITHUB_WORKFLOW: {os.getenv('GITHUB_WORKFLOW', 'NOT SET')}")
     
-    token = require_env("INPUT_GITHUB_TOKEN")
+    token = os.getenv("INPUT_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
+    if not token:
+        print("No GitHub token provided (check INPUT_GITHUB_TOKEN or GITHUB_TOKEN)", file=sys.stderr)
+        sys.exit(1)
     token_prefix = token[:7] if len(token) > 7 else "***"
     token_suffix = token[-4:] if len(token) > 4 else "***"
     print(f"[Main] Token: {token_prefix}...{token_suffix} (length: {len(token)})")
@@ -96,12 +104,22 @@ def main() -> None:
     checkout_work_branch(str(workspace), default_branch, WORK_BRANCH)
 
     print("\n" + "="*80)
-    print("[Main] Step 6: Count files and write file_count")
+    print("[Main] Step 6: Generate README summary")
     print("="*80)
-    total = count_files(workspace)
-    print(f"[Main] Total files counted: {total}")
-    target_path = write_file_count_file(workspace, total)
-    print(f"[Main] Wrote file count to: {target_path}")
+    openai_key = os.getenv("INPUT_LLM_API_KEY") or os.getenv("LLM_API_KEY")
+    if not openai_key:
+        print("[Main] No LLM API key provided; skipping summary generation.")
+        return
+    base_url = os.getenv("INPUT_LLM_BASE_URL") or os.getenv("LLM_BASE_URL")
+    if base_url:
+        print(f"[Main] Using LLM base URL: {base_url}")
+    summary_content = create_summary(client, openai_key, default_branch, base_url)
+    if not summary_content:
+        print("[Main] Failed to generate summary; skipping.")
+        return
+    target_path = workspace / "summary.txt"
+    target_path.write_text(summary_content, encoding="utf-8")
+    print(f"[Main] Wrote summary to: {target_path}")
 
     if not has_changes(str(workspace)):
         print("[Main] No changes detected after writing file_count; exiting.")

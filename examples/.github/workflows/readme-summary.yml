@@ -1,0 +1,24 @@
+name: Update README Summary
+
+on:
+  workflow_dispatch:  # Manual trigger
+  # Or schedule: - cron: '0 0 * * 0' for weekly
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate README Summary
+        uses: Nemo-docs/autodocs@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        # Note: LLM_API_KEY should be set as a repository secret

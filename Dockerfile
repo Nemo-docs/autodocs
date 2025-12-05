@@ -5,7 +5,7 @@ RUN apt-get update \
     && pip install --no-cache-dir uv \
     && rm -rf /var/lib/apt/lists/*
 
-COPY main.py file_counter.py github_client.py pyproject.toml entrypoint.sh /action/
+COPY main.py file_counter.py github_client.py pyproject.toml entrypoint.sh agents.py /action/
 
 WORKDIR /action
 

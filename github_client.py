@@ -9,6 +9,7 @@ import json
 from typing import Optional
 
 import requests
+import base64
 
 API_ROOT = "https://api.github.com"
 
@@ -176,6 +177,19 @@ class GitHubClient:
         pr_data = resp.json()
         print(f"[GitHubClient] Successfully created PR: {pr_data.get('html_url')}")
         return pr_data
+
+    def get_file_content(self, branch: str, path: str) -> str:
+        """Get the content of a file from the repository."""
+        print(f"[GitHubClient] Fetching file: {path} from branch: {branch}")
+        url = f"{API_ROOT}/repos/{self.repo}/contents/{path}?ref={branch}"
+        resp = self.session.get(url, timeout=15)
+        print(f"[GitHubClient] Response status for file: {resp.status_code}")
+        if resp.status_code != 200:
+            print(f"[GitHubClient] ERROR fetching file: {resp.text}")
+            resp.raise_for_status()
+        data = resp.json()
+        content = base64.b64decode(data["content"]).decode("utf-8")
+        return content
 
 
 def run_git(args: list[str], cwd: str) -> str:

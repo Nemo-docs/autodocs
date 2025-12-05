@@ -277,12 +277,19 @@ def has_changes(cwd: str) -> bool:
 
 def push_branch(cwd: str, branch: str) -> None:
     """Push the work branch."""
-    # Fetch the remote branch first to avoid stale info errors with --force-with-lease
+    # Fetch the remote branch first to check if it exists
+    branch_exists_remotely = True
     try:
         run_git(["fetch", "origin", branch], cwd)
     except subprocess.CalledProcessError:
-        # Branch might not exist remotely yet, which is fine
+        # Branch doesn't exist remotely yet
+        branch_exists_remotely = False
         print(f"Branch {branch} doesn't exist remotely yet, will create it")
     
-    run_git(["push", "-u", "origin", branch, "--force-with-lease"], cwd)
+    if branch_exists_remotely:
+        # Use --force-with-lease for existing branches (safer)
+        run_git(["push", "-u", "origin", branch, "--force-with-lease"], cwd)
+    else:
+        # Use --force for new branches (--force-with-lease fails when no remote ref exists)
+        run_git(["push", "-u", "origin", branch, "--force"], cwd)
 

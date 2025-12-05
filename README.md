@@ -1,39 +1,75 @@
-# File Count PR Tool
+# Automated File Count PR Tool
 
-Containerized Python helper that counts non-hidden files in a repository, writes/updates a `file_count` file, commits the change, pushes a branch, and opens a pull request using `GITHUB_TOKEN`.
+This is an open-source GitHub Action that counts the number of non-hidden files in your repository (excluding common directories like `.git`, `node_modules`, `venv`), creates or updates a `file_count` file at the root with the total count, commits the change to a dedicated branch, and opens (or updates) a pull request.
 
-## Directory Layout
-- `src/main.py` — entrypoint orchestrating count, commit, push, PR.
-- `src/file_counter.py` — file counting utility with sensible excludes.
-- `src/github_client.py` — minimal GitHub API + git helpers.
-- `Dockerfile` — builds runnable image.
+## Why Use This?
+- Automated documentation of repo size.
+- Reduces manual setup with Docker containerization.
+- Runs entirely within GitHub Actions.
 
-## Inputs (env)
-- `GITHUB_TOKEN` (required) — repo-scoped token (Actions default).
-- `GITHUB_REPOSITORY` (required) — `owner/repo`.
-- `GITHUB_ACTOR` (optional) — used for git user; default `automation`.
-- `DEFAULT_BRANCH` (optional) — branch to base from; falls back to repo default via API.
-- `WORKSPACE_PATH` (optional) — path to repo checkout; default `/workspace` (works with `docker run -v ${{ github.workspace }}:/workspace`).
+## As a GitHub Action
 
-## Behavior
-- Skips hidden files/dirs and common vendor/venv folders (`.git`, `node_modules`, `venv`, `.venv`, `__pycache__`).
-- Writes the count as plain text to `file_count` at repo root.
-- Creates/updates branch `chore/file-count-update`, pushes with `--force-with-lease`.
-- Opens or reuses a PR titled `Update file_count` targeting the default branch.
-- No PR is opened if there are no changes after writing `file_count`.
+### Prerequisites
+- Your repository must have a `GITHUB_TOKEN` (automatically available in workflows).
+- Workflow permissions: `contents: write` and `pull-requests: write`.
 
-## Local Build/Run
+### Usage in Your Repository's Workflow
+
+Create a file like `.github/workflows/update-file-count.yml` in your host repository:
+
+```yaml
+name: Update File Count
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run File Count Action
+        uses: devan/automated_docs@main  # Replace with your username/repo and tag/branch
+```
+
+This will:
+1. Checkout your repository.
+2. Run the action in a Docker container, mounting your workspace.
+3. Count files, update `file_count`.
+4. Push to branch `chore/file-count-update`.
+5. Create or reuse PR titled `chore: Update file_count`.
+
+### Customization
+- The action uses environment variables from the GitHub context.
+- To customize branch/PR details, fork and edit `src/main.py`.
+
+## Previous Example Issue
+The old example workflow built the Docker image in your host repo, which could accidentally build your repo's image if a `Dockerfile` exists there, leading to unwanted installations (e.g., Poetry/pip from your `requirements.txt`). The new usage avoids this by using the pre-defined action.
+
+## Local Development/Testing
+If you want to test locally:
+
 ```bash
+# Build
 docker build -t file-count-tool .
+
+# Run (mount your repo)
 docker run --rm \
   -e GITHUB_TOKEN=ghp_... \
   -e GITHUB_REPOSITORY=owner/repo \
-  -e GITHUB_ACTOR="$(git config user.name)" \
-  -v "$(pwd)":/workspace \
+  -e GITHUB_ACTOR="Your Name" \
+  -v "$(pwd)":/github/workspace \
   file-count-tool
 ```
 
-## Notes
-- Git is installed in the image; remote is rewritten to include the token for push.
-- Keep functions under ~60 lines for readability.
+## Exclusions
+- Hidden files/directories (starting with `.`).
+- Common dirs: `.git`, `node_modules`, `venv`, `.venv`, `__pycache__`.
+
+## License
+See [LICENSE](LICENSE).
 

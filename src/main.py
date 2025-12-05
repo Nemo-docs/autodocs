@@ -18,9 +18,9 @@ from src.github_client import (
 )
 
 
-WORK_BRANCH = "nemo_docs/file-count-update"
-COMMIT_MSG = "nemo_docs: update file_count"
-PR_TITLE = "Update file_count"
+WORK_BRANCH = "chore/file-count-update"
+COMMIT_MSG = "chore: update file_count"
+PR_TITLE = "chore: Update file_count"
 PR_BODY = "Automated update of file_count."
 
 
@@ -35,7 +35,7 @@ def require_env(name: str) -> str:
 
 def main() -> None:
     """Orchestrate count → write → commit → push → PR."""
-    workspace = Path(os.getenv("WORKSPACE_PATH", "/workspace"))
+    workspace = Path(os.getenv("WORKSPACE_PATH", "/github/workspace"))
     token = require_env("GITHUB_TOKEN")
     repo = require_env("GITHUB_REPOSITORY")
     actor = os.getenv("GITHUB_ACTOR", "automation")

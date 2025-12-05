@@ -1,0 +1,12 @@
+name: "File Count PR Creator"
+description: "Counts files in the repository and creates a PR to update or add file_count with the total count."
+author: "Devan"
+branding:
+  icon: "file-text"
+  color: "blue"
+inputs: {}
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  env:
+    WORKSPACE_PATH: "/github/workspace"

@@ -7,13 +7,11 @@ RUN apt-get update \
     && pip install --no-cache-dir uv \
     && rm -rf /var/lib/apt/lists/*
 
+COPY main.py file_counter.py github_client.py ./
 COPY pyproject.toml ./pyproject.toml
-COPY README.md ./README.md
-COPY src ./src
 
 RUN uv pip install --system --no-cache .
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python", "-m", "src.main"]
-
+ENTRYPOINT ["python", "main.py"]

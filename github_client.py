@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import subprocess
 from typing import Optional
 
@@ -51,7 +52,13 @@ class GitHubClient:
 
 def run_git(args: list[str], cwd: str) -> None:
     """Run a git command and raise on failure."""
-    subprocess.run(["git", *args], cwd=cwd, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    cmd = ["git"] + args
+    print(f"Running: {' '.join(cmd)} in {cwd}")
+    result = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if result.returncode != 0:
+        print(f"Git error (exit {result.returncode}): {cmd}", file=sys.stderr)
+        print(result.stdout, file=sys.stderr)
+        raise subprocess.CalledProcessError(result.returncode, cmd, stdout=result.stdout, stderr=result.stdout)
 
 
 def configure_git_user(cwd: str, actor: str) -> None:

@@ -149,5 +149,12 @@ def has_changes(cwd: str) -> bool:
 
 def push_branch(cwd: str, branch: str) -> None:
     """Push the work branch."""
+    # Fetch the remote branch first to avoid stale info errors with --force-with-lease
+    try:
+        run_git(["fetch", "origin", branch], cwd)
+    except subprocess.CalledProcessError:
+        # Branch might not exist remotely yet, which is fine
+        print(f"Branch {branch} doesn't exist remotely yet, will create it")
+    
     run_git(["push", "-u", "origin", branch, "--force-with-lease"], cwd)
 

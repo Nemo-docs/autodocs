@@ -40,8 +40,8 @@ This will:
 1. Checkout your repository.
 2. Run the action in a Docker container, mounting your workspace.
 3. Count files, update `file_count`.
-4. Push to branch `chore/file-count-update`.
-5. Create or reuse PR titled `chore: Update file_count`.
+4. Push to branch `nemo_docs/file-count-update`.
+5. Create or reuse PR titled `nemo_docs: Update file_count`.
 
 ### Customization
 - The action uses environment variables from the GitHub context.

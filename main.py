@@ -36,7 +36,7 @@ def require_env(name: str) -> str:
 def main() -> None:
     """Orchestrate count → write → commit → push → PR."""
     workspace = Path(os.getenv("WORKSPACE_PATH", "/github/workspace"))
-    token = require_env("GITHUB_TOKEN")
+    token = require_env("INPUT_GITHUB_TOKEN")
     repo = require_env("GITHUB_REPOSITORY")
     actor = os.getenv("GITHUB_ACTOR", "automation")
 

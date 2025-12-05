@@ -4,7 +4,11 @@ author: "Devan"
 branding:
   icon: "file-text"
   color: "blue"
-inputs: {}
+inputs:
+  github_token:
+    description: 'GitHub token for authentication'
+    required: true
+    default: ${{ github.token }}
 runs:
   using: "docker"
   image: "Dockerfile"

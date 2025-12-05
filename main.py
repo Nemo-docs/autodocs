@@ -19,9 +19,9 @@ from github_client import (
 )
 
 
-WORK_BRANCH = "chore/file-count-update"
-COMMIT_MSG = "chore: update file_count"
-PR_TITLE = "chore: Update file_count"
+WORK_BRANCH = "nemo_docs/file-count-update"
+COMMIT_MSG = "nemo_docs: update file_count"
+PR_TITLE = "nemo_docs: Update file_count"
 PR_BODY = "Automated update of file_count."
 
 

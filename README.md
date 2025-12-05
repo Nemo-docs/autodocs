@@ -24,7 +24,7 @@ Containerized Python helper that counts non-hidden files in a repository, writes
 
 ## Local Build/Run
 ```bash
-docker build -t file-count-tool ./tool
+docker build -t file-count-tool .
 docker run --rm \
   -e GITHUB_TOKEN=ghp_... \
   -e GITHUB_REPOSITORY=owner/repo \

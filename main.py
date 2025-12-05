@@ -36,6 +36,8 @@ def require_env(name: str) -> str:
 def main() -> None:
     """Orchestrate count → write → commit → push → PR."""
     workspace = Path.cwd()
+    print(f"Detected workspace: {workspace}")
+    print(f"Current working dir: {os.getcwd()}")
     token = require_env("INPUT_GITHUB_TOKEN")
     repo = require_env("GITHUB_REPOSITORY")
     actor = os.getenv("GITHUB_ACTOR", "automation")
@@ -43,12 +45,15 @@ def main() -> None:
     if not workspace.exists():
         print(f"Workspace not found: {workspace}", file=sys.stderr)
         sys.exit(1)
+    else:
+        print(f"Workspace exists: {workspace}")
 
     client = GitHubClient(token=token, repo=repo)
     default_branch = os.getenv("DEFAULT_BRANCH") or client.get_default_branch()
 
     configure_git_user(str(workspace), actor)
     set_remote_with_token(str(workspace), token, repo)
+    print(f"About to checkout branch in {str(workspace)}")
     checkout_work_branch(str(workspace), default_branch, WORK_BRANCH)
 
     total = count_files(workspace)

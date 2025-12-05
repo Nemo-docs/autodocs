@@ -58,7 +58,7 @@ def run_git(args: list[str], cwd: str) -> None:
     if result.returncode != 0:
         print(f"Git error (exit {result.returncode}): {cmd}", file=sys.stderr)
         print(result.stdout, file=sys.stderr)
-        raise subprocess.CalledProcessError(result.returncode, cmd, stdout=result.stdout, stderr=result.stdout)
+        raise subprocess.CalledProcessError(result.returncode, cmd)
 
 
 def configure_git_user(cwd: str, actor: str) -> None:
@@ -77,6 +77,7 @@ def checkout_work_branch(cwd: str, base_branch: str, work_branch: str) -> None:
     """Fetch base, sync, and create/update the work branch."""
     run_git(["fetch", "origin", base_branch], cwd)
     run_git(["checkout", base_branch], cwd)
+    run_git(["reset", "--hard", f"origin/{base_branch}"], cwd)
     run_git(["pull", "origin", base_branch], cwd)
     run_git(["checkout", "-B", work_branch, f"origin/{base_branch}"], cwd)
 
@@ -92,7 +93,6 @@ def has_changes(cwd: str) -> bool:
     result = subprocess.run(
         ["git", "status", "--porcelain"],
         cwd=cwd,
-        check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

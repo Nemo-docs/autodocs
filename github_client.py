@@ -61,6 +61,31 @@ def run_git(args: list[str], cwd: str) -> None:
         raise subprocess.CalledProcessError(result.returncode, cmd)
 
 
+def is_git_repo(cwd: str) -> bool:
+    """Check if the current directory is inside a Git repository."""
+    try:
+        run_git(["rev-parse", "--is-inside-work-tree"], cwd)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def ensure_git_repo(cwd: str, token: str, repo: str, default_branch: str) -> None:
+    """Initialize a Git repository in the workspace if it doesn't exist."""
+    if is_git_repo(cwd):
+        return
+
+    print(f"Initializing Git repository in {cwd}...")
+    run_git(["init"], cwd)
+
+    authed_url = f"https://x-access-token:{token}@github.com/{repo}"
+    run_git(["remote", "add", "origin", authed_url], cwd)
+
+    run_git(["fetch", "--depth=1", "origin", default_branch], cwd)
+    run_git(["checkout", "-B", default_branch, f"origin/{default_branch}"], cwd)
+    run_git(["pull", "origin", default_branch], cwd)
+
+
 def configure_git_user(cwd: str, actor: str) -> None:
     """Configure git user for commits."""
     run_git(["config", "--local", "user.name", actor], cwd)

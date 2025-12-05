@@ -11,6 +11,7 @@ from github_client import (
     GitHubClient,
     checkout_work_branch,
     configure_git_user,
+    ensure_git_repo,
     has_changes,
     push_branch,
     set_remote_with_token,
@@ -50,6 +51,8 @@ def main() -> None:
 
     client = GitHubClient(token=token, repo=repo)
     default_branch = os.getenv("DEFAULT_BRANCH") or client.get_default_branch()
+
+    ensure_git_repo(str(workspace), token, repo, default_branch)
 
     configure_git_user(str(workspace), actor)
     set_remote_with_token(str(workspace), token, repo)
